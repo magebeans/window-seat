@@ -24,26 +24,23 @@ timeline, day/night line and the zoom plan (which stretches get detailed tiles) 
 Set your real date and the scheduled time, then rebuild. Departure has been listed at 16:25 for
 recent dates; check it against your booking.
 
-## Route: great circle, until you add tracks
+## Route: one real track (FlightRadar24, 2026-11-20)
 
-No track history could be fetched automatically. FlightAware and FlightRadar24 both refuse
-scripted requests, and their KML/CSV exports need a logged-in browser. **The route is therefore the
-great circle**, which for SEA → DOH runs over northern Canada, close to the North Pole, then down
-over Russia, Kazakhstan, the Caspian and Iran. The real QR720 may route differently. The corridor
-is 300 km wide, so a track that strays far from the great circle can leave the detailed tiles.
+The route line, timing profile and corridor come from a FlightRadar24 KML of QR720 on 2026-11-20
+(`tracks/`, git-ignored, because FR24's terms restrict redistribution and this repo is public).
+It runs SEA → BC → Baffin → across Greenland → Norwegian Sea → Norway/Sweden/Denmark → Poland →
+Slovakia → Romania → Bulgaria → Black Sea → Turkey → Iraq → Gulf, 13,010 km. That is about 1,100 km
+longer than the great circle, which goes over the pole and Russia instead.
 
-To use real tracks (2 or 3 is ideal), any of these works:
+One day's routing can differ from the next. Adding 1–2 more tracks makes the corridor widen to
+contain them all. Either way:
 
-- **Download from a browser.** Use FlightAware ("Track log & graph", then KML) or FlightRadar24
-  (playback, then "Download KML/CSV"; needs a paid plan). Put the files in `tracks/` and rebuild.
-  The line follows the median-length track, and the corridor widens to contain the others.
-- **adsb.lol open data.** Run `pipeline/fetch_adsblol.py 2026-11-18`. It streams one day of
-  the global ADS-B archive and keeps only the QTR720 leg. Each day is about **3.8 GB downloaded**
-  (nothing is stored), so it asks before it starts. It has not been run as part of this build.
-- **No rebuild at all.** On the phone, open ⚙︎ → Route → *Import track* and pick a KML, GPX, CSV
-  or GeoJSON file. That replaces the route line, timeline, simulation and look list right away.
-  It is stored on the device. The basemap does not change, so detail outside the original
-  corridor stays at the low "wide" zoom.
+- **Files.** Put more KML/CSV/GPX/GeoJSON in `tracks/` and run `scripts/build.sh` (route, basemap,
+  POIs, assets). `pipeline/fetch_adsblol.py` can pull tracks from adsb.lol's open archive, but
+  each day is about 3.8 GB downloaded (it asks first; not yet run).
+- **No rebuild.** On the phone, use ⚙︎ → Route → *Import track*. That replaces the route line,
+  timeline, simulation and look list on the spot. The tiles do not change, so detail outside the
+  original corridor stays at the low "wide" zoom.
 
 ## Rebuilding the data
 
@@ -79,7 +76,9 @@ scripts/build.sh basemap --override 4=11    # build with that
 ```
 
 For a lasting change, edit `zoom` (or add `"zoom_overrides": {"km 7194-10165": 11}`) in the
-config. With the placeholder date the basemap is **300 MB** and the whole site is about **314 MB** (895 files).
+config. With the placeholder date, daylight covers Norway → Iraq. Europe at z12 would be 669 MB on
+its own, so `zoom_overrides` puts km 7255–10015 at z10 (157 MB; z11 is ~330 MB). Turkey and Iraq
+stay at z12. The basemap is **352 MB** and the whole site **366 MB** (909 files).
 
 ### POIs
 
@@ -141,7 +140,7 @@ npm run serve               # http://localhost:8080 ; add ?sim (&speed=300 &at=6
 **Simulate flight.** Open `http://localhost:8080/?sim`, or pick ⚙︎ → Position → Simulate flight.
 It replays the route as fake GPS with noise, at 1–1000×, and runs a simulated clock so the
 day/night line and ETAs match. Tap the timeline to jump to any point of the flight. `?at=640`
-starts 640 minutes after departure (over Russia in daylight with the placeholder date).
+starts 640 minutes after departure (over Poland in daylight with the placeholder date).
 
 ## Deploy to GitHub Pages
 

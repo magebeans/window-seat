@@ -28,6 +28,10 @@
     "airport_radius_km": 40,
     "water_threshold": 0.85
   },
+  "zoom_overrides": {
+    "_note": "keys are region labels from `scripts/build.sh plan`; Europe at z12 is 669 MB, z11 ~330, z10 157",
+    "km 7255-10015": 10
+  },
   "budget_mb": 400,
   "protomaps_build": "latest",
 

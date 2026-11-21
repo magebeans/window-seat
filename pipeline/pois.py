@@ -110,7 +110,8 @@ def sparql_box(w, s, e, n, min_sl, depth=0):
     q = SPARQL % {"w": w, "s": s, "e": e, "n": n, "min_sl": min_sl}
     try:
         res = http_json("https://query.wikidata.org/sparql?format=json",
-                        data=urllib.parse.urlencode({"query": q}).encode(), cache_key=q)
+                        data=urllib.parse.urlencode({"query": q}).encode(), cache_key=q,
+                        retries=1 if depth < 3 else 3)  # a timeout means "too dense": split instead of retrying
         return res["results"]["bindings"]
     except Exception as ex:  # timeouts on dense boxes: split in four
         if depth >= 3:
