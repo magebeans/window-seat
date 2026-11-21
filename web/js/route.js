@@ -39,7 +39,9 @@ export class Route {
     const [a, b, ta] = this.points[i], [c, d, tb] = this.points[i + 1];
     const [lat, lon] = gcInterpolate(a, b, c, d, f);
     const segKm = this.cum[i + 1] - this.cum[i];
-    const speed = segKm / (((tb - ta) || 1) / 60);
+    // ground speed over ~±50 km of track: per-segment timestamps from a real track are jittery
+    const a0 = Math.max(0, i - 5), b0 = Math.min(this.points.length - 1, i + 6);
+    const speed = (this.cum[b0] - this.cum[a0]) / (((this.points[b0][2] - this.points[a0][2]) || 1) / 60);
     return { lat, lon, heading: bearingDeg(a, b, c, d), speedKmh: speed, km: this.cum[i] + f * segKm, t: ta + f * (tb - ta) };
   }
 
