@@ -151,7 +151,7 @@ def manifest():
         if rel.startswith("js/sw-template"):
             continue
         group = "shell" if rel.startswith(SHELL_PREFIXES) else "data"
-        entries.append({"url": quote(rel), "size": p.stat().st_size, "sha256": sha256(p), "group": group})
+        entries.append({"url": quote(rel, safe="/@!$&'()*+,;=:~"), "size": p.stat().st_size, "sha256": sha256(p), "group": group})
     version = hashlib.sha256("".join(e["url"] + e["sha256"] for e in entries).encode()).hexdigest()[:12]
     basemap = json.loads((WEB / "data/basemap.json").read_text()) if (WEB / "data/basemap.json").exists() else None
     m = {"version": version, "entries": entries,

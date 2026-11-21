@@ -28,7 +28,7 @@ const server = await serve();
 const engine = process.env.BROWSER === 'webkit' ? webkit : chromium;
 console.log(`engine: ${engine.name()}`);
 const browser = await engine.launch({ headless: !process.env.HEADED });
-const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 2 }); // retina: requests the @2x sprite like an iPhone
 const page = await ctx.newPage();
 const consoleErrors = [];
 page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
