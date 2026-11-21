@@ -106,6 +106,18 @@ try {
   const realErrors = consoleErrors.filter((m) => !/ERR_CONNECTION_REFUSED|Could not connect to the server|Failed to update a ServiceWorker/.test(m));
   ok('no console errors', realErrors.length === 0, realErrors.slice(0, 3).join(' | '));
 
+  // slider mode (the default "Start"): drag to T+700 and the plane, list and labels follow
+  await page.goto(URL0);
+  await page.waitForFunction(() => window.__ws?.map()?.loaded(), null, { timeout: 30000 });
+  await page.click('#btn-start');
+  await page.evaluate(() => { const s = document.getElementById('pos-slider'); s.value = '700'; s.dispatchEvent(new Event('input', { bubbles: true })); s.dispatchEvent(new Event('change', { bubbles: true })); });
+  await page.waitForTimeout(3000);
+  const man = await page.evaluate(() => ({ src: window.__ws.S.source, t: Math.round((window.__ws.clock.now() - new Date(window.__ws.S.route.json.departure)) / 60000), chip: document.getElementById('gps-text').textContent, label: document.getElementById('pos-label').textContent, look: document.querySelectorAll('#look-list li:not(.empty)').length }));
+  ok('slider sets position (manual mode)', man.src === 'manual' && Math.abs(man.t - 700) <= 2 && man.look >= 3, `${man.chip} | ${man.label} | ${man.look} items`);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ws-manual')));
+  ok('slider position is saved for relaunch', saved && Math.abs(saved.t - 700) < 3, JSON.stringify(saved));
+  await page.screenshot({ path: path.join(ROOT, 'build/e2e-slider.png') });
+
   // a missing file must fail visibly
   await page.evaluate(() => fetch('data/definitely-not-cached.json'));
   await page.waitForTimeout(300);

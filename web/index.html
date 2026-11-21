@@ -36,10 +36,15 @@
   <div id="banner" hidden></div>
 
   <section id="bottom">
-    <div id="timeline-wrap">
-      <canvas id="timeline"></canvas>
-      <div id="timeline-label"></div>
+    <div id="pos-row">
+      <button id="btn-pause" class="mini" aria-label="Pause">⏸</button>
+      <button id="btn-now" class="mini" title="Jump to where the schedule says you are">Now</button>
+      <div id="timeline-wrap">
+        <canvas id="timeline"></canvas>
+        <input id="pos-slider" type="range" min="0" max="900" step="1" value="0" aria-label="Position along the route">
+      </div>
     </div>
+    <div id="pos-line"><span id="pos-label"></span><span id="timeline-label"></span></div>
     <div id="look">
       <div class="look-head"><span>Out the window</span><span id="look-note"></span><button id="look-toggle" aria-label="Collapse">▾</button></div>
       <ol id="look-list"><li class="empty">Waiting for a position…</li></ol>
@@ -78,8 +83,9 @@
 
     <h2>Position</h2>
     <div class="row">
-      <label><input type="radio" name="src" value="gps" checked> GPS</label>
-      <label><input type="radio" name="src" value="sim"> Simulate flight</label>
+      <label><input type="radio" name="src" value="manual" checked> Slider</label>
+      <label><input type="radio" name="src" value="gps"> GPS</label>
+      <label><input type="radio" name="src" value="sim"> Fast replay</label>
     </div>
     <div id="sim-controls" class="row">
       <label>Speed <select id="sim-speed">
@@ -112,10 +118,10 @@
       <h1>Window Seat</h1>
       <p id="start-flight"></p>
       <p id="start-cache" class="fine"></p>
-      <button id="btn-start" class="primary">Start GPS</button>
-      <button id="btn-start-sim">Simulate flight</button>
+      <button id="btn-start" class="primary">Start</button>
+      <button id="btn-start-sim">Fast replay of the flight</button>
       <button id="btn-start-settings">Offline status &amp; settings</button>
-      <p class="fine">Starting asks for location access and keeps the screen on. GPS works in airplane mode; sit by the window.</p>
+      <p class="fine">Starts at the position the schedule predicts and keeps the screen on. Drag the slider under the map to where you actually are; it keeps moving from there.</p>
     </div>
   </div>
 

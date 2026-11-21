@@ -1,7 +1,7 @@
 # Window Seat
 
 An offline-first web app for the iPhone that shows what is out the airplane window: a map with your
-live GPS position, the planned route and corridor, a "look left / look right" list of notable
+position (set with a slider along the route and advanced on the schedule, or from GPS), the planned route and corridor, a "look left / look right" list of notable
 features coming up, a day/night line, a daylight timeline for the whole flight, and short offline
 Wikipedia summaries. After one download it makes **no network requests at all**.
 
@@ -121,6 +121,10 @@ offline`, and holds a wake lock while it runs.
 the page shows a red banner naming the file. ⚙︎ also shows a counter of any network fetches, which
 must read **0** after the airplane-mode reload. Uncached glyph ranges are the one exception: they
 return an empty PBF, so labels in scripts the fonts do not cover are skipped instead of erroring.
+
+**Position.** The default is a slider on the timeline strip: drag it to where you are and it advances
+at scheduled speed from there (⏸ pauses, *Now* snaps to the schedule; saved across relaunches).
+GPS (`watchPosition`) and a fast replay are still in ⚙︎ → Position.
 
 **iOS specifics.** The manifest and `apple-touch-icon` are included, and `viewport-fit=cover` with
 `env(safe-area-inset-*)` keeps the layout clear of the notch and home bar. Location is requested

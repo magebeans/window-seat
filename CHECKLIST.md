@@ -32,27 +32,24 @@ Do this on Wi-Fi, the evening before. It takes about 15 minutes, most of it the 
       a cold start with no network.
 - [ ] No red banner appears.
 
-## 4. GPS fix
+## 4. Position slider
 
-- [ ] Tap **Start GPS** and allow location (**Precise** on). If there is no prompt and it says
-      *Location denied*, go to Settings → Privacy & Security → Location Services → Safari Websites →
-      *While Using the App*.
-- [ ] Wait for the chip to go green: `GPS ±… m`. Indoors with no network, the first fix can take
-      **several minutes**. In airplane mode the GPS gets no assistance data, so it has to collect
-      satellite data itself. A window helps a lot.
-- [ ] Tip for the day: get a fix at the gate **before** airplane mode, and keep the app open. A warm
-      GPS refixes in seconds at the window.
+- [ ] Tap **Start**. The plane appears where the schedule says it is (at SEA until 4:10 PM wheels-up).
+- [ ] Drag the round thumb on the timeline strip: the map, the "Out the window" list and the
+      Seattle/Doha times under the strip follow. It keeps moving at flight speed from wherever you leave it.
+- [ ] **⏸** freezes it (for delays on the ground); **Now** snaps back to the schedule.
+- [ ] Close and reopen the app: it resumes where you left it, plus the elapsed time.
 
 ## 5. Tiles and features
 
 - [ ] Pinch-zoom around your current location: streets and labels draw (detail near SEA goes to z13).
-- [ ] ⚙︎ → Position → **Simulate flight**, drag *From* to about two-thirds, and close settings:
+- [ ] Drag the slider to about two-thirds:
   - [ ] The map follows the fake plane over the daylight stretch, with labels.
   - [ ] **Out the window** lists features with ◀ LEFT / RIGHT ▶, the km off track and minutes to abeam.
   - [ ] Tap one: a summary appears.
   - [ ] The timeline strip has a red marker, and its label reads *Daylight for …* or *Next daylight in …*.
 - [ ] ⚙︎ → **Network fetches** still reads **0**.
-- [ ] Switch back to **GPS** (⚙︎ → Position → GPS).
+- [ ] Tap **Now** to return to the schedule.
 
 ## 6. Keep-awake and power
 
@@ -63,8 +60,6 @@ Do this on Wi-Fi, the evening before. It takes about 15 minutes, most of it the 
 
 ## On board
 
-- Window seat, phone near the glass. The GPS works fine in airplane mode, but the cabin blocks a
-  lot of sky.
-- If GPS drops out, the app shows a faded plane at the **schedule estimate**, labelled as such.
-  You can turn that off in ⚙︎.
+- When you can see something you can place (a coastline, a big lake), drag the slider so the plane
+  sits there; everything ahead then lines up. The seatback map is a good reference too.
 - Use ⬆︎ (track-up) so the left of the screen is the left of the plane.

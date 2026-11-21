@@ -49,9 +49,22 @@ button.round.on { background: var(--accent); color: #111; }
   background: var(--bad); color: #fff; border-radius: 12px; padding: 10px 14px; font-size: 14px; white-space: pre-wrap; }
 
 #bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 calc(var(--sr) + 8px) calc(var(--sb) + 8px) calc(var(--sl) + 8px); }
-#timeline-wrap { position: relative; margin-bottom: 6px; }
+#pos-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+button.mini { background: var(--bg); padding: 0 10px; height: 34px; border-radius: 9px; font-size: 14px; flex: none;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#timeline-wrap { position: relative; flex: 1; height: 34px; }
+#timeline-wrap #timeline { height: 34px; }
+#pos-slider { position: absolute; inset: 0; width: 100%; height: 34px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; touch-action: none; }
+#pos-slider::-webkit-slider-runnable-track { height: 34px; background: transparent; }
+#pos-slider::-moz-range-track { height: 34px; background: transparent; }
+#pos-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: 4px; border-radius: 50%;
+  background: #fff; border: 4px solid #ff3b30; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+#pos-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 4px solid #ff3b30; }
+#pos-line { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+#pos-line span { font-size: 12.5px; background: var(--bg); border-radius: 8px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+#pos-line span:empty { display: none; }
+#timeline-label { color: #ffd60a; }
 #timeline { width: 100%; height: 26px; display: block; border-radius: 8px; }
-#timeline-label { position: absolute; right: 8px; top: 4px; font-size: 12px; background: rgba(0,0,0,0.45); padding: 1px 7px; border-radius: 6px; pointer-events: none; }
 #look { background: var(--bg); border-radius: 14px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); max-height: 42vh; display: flex; flex-direction: column; }
 .look-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 4px 14px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .look-head #look-note { flex: 1; text-transform: none; letter-spacing: 0; font-weight: 400; text-align: right; }

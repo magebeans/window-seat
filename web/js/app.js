@@ -3,7 +3,7 @@ import { Protocol } from '../vendor/pmtiles.mjs';
 import { buildStyle, planeImage } from './style.js';
 import { loadRoute, parseTrack, routeFromTrack, clearOverride } from './route.js';
 import { PoiStore, lookList, TYPE_ICON } from './pois.js';
-import { GpsSource, SimSource, Clock, MotionEstimator } from './gps.js';
+import { GpsSource, SimSource, ManualSource, Clock, MotionEstimator } from './gps.js';
 import { OfflineCache, persistStorage, fmtMB } from './cache.js';
 import { Timeline } from './timeline.js';
 import { KeepAwake } from './wakelock.js';
@@ -20,7 +20,7 @@ const S = {
   lastGpsAt: null,      // ms (real time) of last real GPS fix
   gpsWaitSince: null,
   gpsError: null,
-  source: 'gps',
+  source: 'manual',
   follow: true, trackUp: !!prefs.trackUp,
   look: [], highlight: new Map(),
   netCount: 0, misses: new Set(),
@@ -29,7 +29,7 @@ const S = {
 const clock = new Clock();
 const motion = new MotionEstimator();
 const pois = new PoiStore((e) => showError(`POI data: ${e.message}`));
-let map, timeline, gps, sim, cache, awake;
+let map, timeline, gps, sim, manual, cache, awake;
 
 // ---------------------------------------------------------------- errors: always visible
 
@@ -184,7 +184,8 @@ function onFix(raw) {
     S.lastGpsAt = Date.now(); S.gpsError = null; clearError('gps');
     if (S.source !== 'gps') return; // simulating: ignore the real GPS
   }
-  S.fix = raw.source === 'estimate' ? raw : motion.push(raw);
+  S.fix = raw.source === 'estimate' || raw.source === 'manual' ? raw : motion.push(raw);
+  if (raw.source === 'manual') syncSlider();
   update();
 }
 
@@ -224,7 +225,8 @@ function update() {
 
   setSource('plane', planeFC());
   if (map && S.follow) {
-    const opts = { center: [f.lon, Math.max(-85, Math.min(85, f.lat))], duration: 600 };
+    // keep the plane in the middle of the part of the map not covered by the bottom panel
+    const opts = { center: [f.lon, Math.max(-85, Math.min(85, f.lat))], duration: 600, padding: { top: 90, bottom: $('bottom').offsetHeight, left: 0, right: 0 } };
     if (S.trackUp && f.heading != null) opts.bearing = f.heading;
     map.easeTo(opts);
   }
@@ -290,7 +292,13 @@ function renderGpsChip() {
   const chip = $('gps-chip'), txt = $('gps-text');
   const f = S.fix;
   chip.className = 'chip';
-  if (S.source === 'sim') { chip.classList.add('fix'); txt.textContent = `Simulated · ${clock.now().toISOString().slice(11, 16)}Z`; return; }
+  if (S.source === 'sim') { chip.classList.add('fix'); txt.textContent = `Fast replay · ${clock.now().toISOString().slice(11, 16)}Z`; return; }
+  if (S.source === 'manual') {
+    const d = manual ? Math.round(manual.t - manual.scheduleT()) : 0;
+    chip.classList.add(manual?.paused ? 'stale' : 'fix');
+    txt.textContent = manual?.paused ? 'Slider · paused' : Math.abs(d) < 2 ? 'Slider · on schedule' : `Slider · ${d > 0 ? 'ahead of' : 'behind'} schedule ${fmtDur(Math.abs(d))}`;
+    return;
+  }
   if (S.lastGpsAt && Date.now() - S.lastGpsAt < 30000 && f?.source === 'gps') {
     const acc = Math.round(f.acc);
     chip.classList.add(acc <= 100 ? 'fix' : 'weak');
@@ -327,9 +335,34 @@ function openInfo(id) {
 
 // ---------------------------------------------------------------- controls
 
+const fmtDur = (m) => (m >= 60 ? `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}` : `${Math.round(m)} min`);
+function stopSources() { gps.stop(); sim?.stop(); manual?.stop(); }
+
+function syncSlider() {
+  if (!manual || S.source !== 'manual') return;
+  const t = manual.t, sl = $('pos-slider');
+  if (!S.dragging) sl.value = String(Math.max(Number(sl.min), Math.min(Number(sl.max), t)));
+  const r = S.route;
+  const local = new Date(r.departure.getTime() + t * 60000);
+  const where = t < r.tStart ? 'at the gate / taxiing' : t > r.tEnd ? 'landed' : `T+${fmtDur(t)} after departure`;
+  $('pos-label').textContent = `${where} · ${local.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles' })} Seattle · ${local.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Qatar' })} Doha`;
+  $('btn-pause').textContent = manual.paused ? '▶' : '⏸';
+}
+
+function startManual(t) {
+  stopSources();
+  S.source = 'manual';
+  manual.start(t);
+  S.follow = true; $('btn-follow').classList.add('on');
+  document.querySelector('input[name=src][value=manual]').checked = true;
+  lastFlavorCheck = 0;
+  setSource('night', nightFC(clock.now()));
+}
+
 function startGps() {
+  stopSources();
   S.source = 'gps';
-  sim?.stop();
+  $('pos-label').textContent = '';
   motion.reset();
   S.fix = null;
   S.gpsWaitSince = Date.now();
@@ -339,8 +372,9 @@ function startGps() {
 }
 
 function startSim(atMinutes) {
+  stopSources();
   S.source = 'sim';
-  gps.stop();
+  $('pos-label').textContent = '';
   motion.reset();
   sim.setSpeed(Number($('sim-speed').value));
   const from = atMinutes ?? S.route.tStart + Number($('sim-from').value) * (S.route.tEnd - S.route.tStart);
@@ -355,11 +389,23 @@ function begin(mode) {
   $('start').hidden = true;
   awake.start($('opt-video').checked).catch(() => {});
   refreshStorage();
-  if (mode === 'sim') startSim(); else startGps();
+  if (mode === 'sim') startSim(); else if (mode === 'gps') startGps(); else startManual();
 }
 
 function bindUI() {
-  $('btn-start').onclick = () => begin('gps');
+  $('btn-start').onclick = () => begin('manual');
+  const sl = $('pos-slider');
+  sl.min = String(Math.floor(S.route.tStart)); sl.max = String(Math.ceil(S.route.tEnd));
+  sl.addEventListener('pointerdown', () => { S.dragging = true; });
+  sl.addEventListener('input', () => {
+    if (S.source !== 'manual') startManual(Number(sl.value)); else manual.start(Number(sl.value));
+    S.follow = true; $('btn-follow').classList.add('on');
+    lastFlavorCheck = 0;
+    setSource('night', nightFC(clock.now()));
+  });
+  sl.addEventListener('change', () => { S.dragging = false; manual.save(); });
+  $('btn-pause').onclick = () => { if (S.source !== 'manual') startManual(); manual.setPaused(!manual.paused); syncSlider(); renderGpsChip(); };
+  $('btn-now').onclick = () => { manual.paused = false; startManual(manual.scheduleT()); };
   $('btn-start-sim').onclick = () => begin('sim');
   $('btn-settings').onclick = $('btn-start-settings').onclick = () => { $('settings').hidden = false; cache.status(); refreshStorage(); };
   document.querySelectorAll('[data-close]').forEach((b) => { b.onclick = () => { $(b.dataset.close).hidden = true; }; });
@@ -387,7 +433,7 @@ function bindUI() {
     cache.status();
   };
 
-  document.querySelectorAll('input[name=src]').forEach((r) => { r.onchange = () => (r.value === 'sim' ? startSim() : startGps()); });
+  document.querySelectorAll('input[name=src]').forEach((r) => { r.onchange = () => (r.value === 'sim' ? startSim() : r.value === 'gps' ? startGps() : startManual()); });
   $('sim-speed').onchange = () => sim.setSpeed(Number($('sim-speed').value));
   const fromLabel = () => {
     const t = S.route.tStart + Number($('sim-from').value) * (S.route.tEnd - S.route.tStart);
@@ -425,6 +471,10 @@ function bindUI() {
 function setRoute(route, overridden) {
   S.route = route; S.overridden = overridden;
   sim = new SimSource(route, onFix, clock);
+  manual?.stop();
+  manual = new ManualSource(route, onFix, clock);
+  $('pos-slider').min = String(Math.floor(route.tStart)); $('pos-slider').max = String(Math.ceil(route.tEnd));
+  if (S.source === 'manual') startManual();
   timeline.setRoute(route);
   setSource('route', route.lineGeoJSON());
   setSource('corridor', route.corridorGeoJSON());
@@ -451,6 +501,7 @@ async function boot() {
   timeline = new Timeline($('timeline'), $('timeline-label'), (t) => { if (S.source === 'sim') startSim(t); });
   timeline.setRoute(S.route);
   sim = new SimSource(S.route, onFix, clock);
+  manual = new ManualSource(S.route, onFix, clock);
   gps = new GpsSource(onFix, onGpsError);
   renderRouteInfo();
   bindUI();
@@ -465,7 +516,7 @@ async function boot() {
     if (phase !== 'ready' && !navigator.onLine) showError(`Offline and the cache is incomplete (${cache.state.missing.length} files missing). Parts of the map or features will be blank.`, 'incomplete');
   } catch (e) { showError(`Cache check failed: ${e.message}`); }
 
-  setInterval(() => { renderGpsChip(); estimateTick(); }, 5000);
+  setInterval(() => { renderGpsChip(); estimateTick(); if (S.source === 'manual' && manual.running) manual.save(); }, 5000);
   setInterval(() => { if (!clock.simulated) setSource('night', nightFC(clock.now())); }, 60000);
   setInterval(() => { if (clock.simulated) setSource('night', nightFC(clock.now())); }, 2000);
 

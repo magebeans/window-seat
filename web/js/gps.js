@@ -99,3 +99,52 @@ export class Clock {
     return new Date(this.anchor.sim + (Date.now() - this.anchor.real) * this.anchor.speedup);
   }
 }
+
+/**
+ * Manual position: you set where along the route the plane is (slider), and it then advances on the
+ * schedule at real speed, or stays put while paused. State survives reloads (localStorage), so a
+ * relaunch mid-flight continues from where you left it, plus the time that has passed.
+ */
+export class ManualSource {
+  static KEY = 'ws-manual';
+  constructor(route, onFix, clock) {
+    this.route = route; this.onFix = onFix; this.clock = clock;
+    this.timer = null; this.paused = false;
+  }
+  /** Minutes after departure the schedule says it is now. */
+  scheduleT() { return (Date.now() - this.route.departure) / 60000; }
+  /** Restore the last saved position, advanced by elapsed time unless it was paused. */
+  restoredT() {
+    try {
+      const s = JSON.parse(localStorage.getItem(ManualSource.KEY));
+      if (s && s.departure === this.route.departure.toISOString()) {
+        this.paused = !!s.paused;
+        return s.t + (s.paused ? 0 : (Date.now() - s.at) / 60000);
+      }
+    } catch { /* ignore */ }
+    return null;
+  }
+  start(t = this.restoredT() ?? this.scheduleT()) {
+    this.clock.sim(new Date(this.route.departure.getTime() + t * 60000), this.paused ? 0 : 1);
+    clearInterval(this.timer);
+    this.tick();
+    this.timer = setInterval(() => this.tick(), 2000);
+    this.save();
+  }
+  get t() { return (this.clock.now() - this.route.departure) / 60000; }
+  tick() {
+    const t = this.t;
+    const s = this.route.atMinutes(t);
+    const airborne = t > this.route.tStart && t < this.route.tEnd;
+    this.onFix({
+      lat: s.lat, lon: s.lon, acc: null, alt: airborne ? 11000 : 0,
+      heading: s.heading, speedKmh: airborne ? s.speedKmh : 0, t: this.clock.now().getTime(), source: 'manual',
+    });
+  }
+  setPaused(p) { this.paused = p; this.start(this.t); }
+  save() {
+    localStorage.setItem(ManualSource.KEY, JSON.stringify({ t: this.t, at: Date.now(), paused: this.paused, departure: this.route.departure.toISOString() }));
+  }
+  stop() { if (this.timer) this.save(); clearInterval(this.timer); this.timer = null; this.clock.real(); }
+  get running() { return this.timer != null; }
+}
