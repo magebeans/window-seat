@@ -14,7 +14,7 @@
  * Nothing here goes to the network if the file is cached. If it is not cached and the network is
  * down, the response is a 504 and every open page is told which file was missing.
  */
-const VERSION = '6ae93db0d45b';
+const VERSION = 'c2375c4dcea3';
 const SHELL = `ws-shell-${VERSION}`;
 const DATA = 'ws-data';
 const SCOPE = new URL(self.registration.scope);
