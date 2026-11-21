@@ -14,7 +14,7 @@
  * Nothing here goes to the network if the file is cached. If it is not cached and the network is
  * down, the response is a 504 and every open page is told which file was missing.
  */
-const VERSION = 'c2375c4dcea3';
+const VERSION = 'd87082a8a006';
 const SHELL = `ws-shell-${VERSION}`;
 const DATA = 'ws-data';
 const SCOPE = new URL(self.registration.scope);
@@ -97,13 +97,16 @@ function missing(path, why) {
 }
 
 async function fromCaches(path) {
-  const url = abs(path);
+  // try the URL as requested and with reserved characters percent-encoded (a build once stored
+  // "light%402x.png" while MapLibre asks for "light@2x.png"; the Cache API compares raw strings)
+  const variants = [...new Set([path, path.replace(/@/g, '%40'), path.replace(/%40/g, '@')])];
   const s = await caches.open(SHELL);
-  let r = await s.match(url, { ignoreSearch: true });
-  if (r) return r;
   const d = await caches.open(DATA);
-  r = await d.match(url, { ignoreSearch: true });
-  return r || null;
+  for (const v of variants) {
+    const r = (await s.match(abs(v), { ignoreSearch: true })) || (await d.match(abs(v), { ignoreSearch: true }));
+    if (r) return r;
+  }
+  return null;
 }
 
 async function cacheFirst(request, path) {
