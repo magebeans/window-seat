@@ -91,23 +91,41 @@ async function setupServiceWorker() {
 
 // ---------------------------------------------------------------- cache UI
 
+// rolling download rate: bytes landed in the cache over the last ~10 s (files arrive 4 MB at a time,
+// so an instantaneous figure would jump between 0 and huge)
+const rate = { samples: [] };
+function speedText(st) {
+  const now = Date.now(), s = rate.samples;
+  s.push([now, st.doneBytes]);
+  while (s.length > 2 && now - s[0][0] > 10000) s.shift();
+  if (s.length < 2 || now - s[0][0] < 2000) return ' · measuring speed…';
+  const bps = (s.at(-1)[1] - s[0][1]) / ((now - s[0][0]) / 1000);
+  if (bps <= 0) return ' · stalled? (tap Download missing to restart)';
+  const left = (st.totalBytes - st.doneBytes) / bps;
+  const eta = left < 90 ? `${Math.round(left)} s` : left < 5400 ? `${Math.round(left / 60)} min` : `${(left / 3600).toFixed(1)} h`;
+  return ` · ${(bps / 1e6).toFixed(1)} MB/s · ~${eta} left`;
+}
+
 function renderCache(st) {
   const line = $('cache-line'), dot = $('cache-dot');
   $('cache-progress').value = st.totalBytes ? st.doneBytes / st.totalBytes : 0;
   $('version').textContent = st.version || '—';
   const mb = `${fmtMB(st.doneBytes)} of ${fmtMB(st.totalBytes)} cached`;
   line.className = 'big';
+  if (st.phase !== 'downloading') rate.samples = [];
   if (st.phase === 'ready') {
     line.textContent = `${mb}, ready for offline ✓`; line.classList.add('ready'); dot.className = 'badge ok';
   } else if (st.phase === 'downloading') {
-    line.textContent = `${mb} (${st.doneFiles}/${st.totalFiles} files)…`; dot.className = 'badge busy';
+    line.textContent = `${mb} (${st.doneFiles}/${st.totalFiles} files)${speedText(st)}`; dot.className = 'badge busy';
   } else if (st.phase === 'checking') {
     line.textContent = 'Checking cache…'; dot.className = 'badge busy';
   } else {
     line.textContent = `${mb}: NOT ready for offline (${st.missing.length} files missing)`; line.classList.add('bad'); dot.className = 'badge';
   }
   $('start-cache').textContent = line.textContent;
-  if (st.errors?.length) log(st.errors.slice(-5).join('\n'));
+  const errKey = (st.errors || []).join('|');
+  if (errKey && errKey !== rate.lastErr) log(st.errors.slice(-5).join('\n'));
+  rate.lastErr = errKey;
 }
 const logLines = [];
 function log(msg) { logLines.push(msg); $('cache-log').textContent = logLines.slice(-30).join('\n'); }
@@ -279,7 +297,7 @@ function fmtEta(it) {
 function renderLook() {
   const ul = $('look-list');
   if (!S.look.length) {
-    ul.innerHTML = `<li class="empty">${pois.loaded.size ? 'Nothing notable within 150 km ahead. Open ocean or ice, most likely.' : 'Loading features…'}</li>`;
+    ul.innerHTML = `<li class="empty">${pois.loaded.size ? 'Nothing notable within 250 km ahead. Open ocean or ice, most likely.' : 'Loading features…'}</li>`;
     return;
   }
   ul.innerHTML = '';
@@ -425,9 +443,21 @@ function bindUI() {
     $('btn-trackup').classList.toggle('on', S.trackUp);
     if (!S.trackUp) map.easeTo({ bearing: 0 }); else update();
   };
-  $('look-toggle').onclick = () => { $('look').classList.toggle('collapsed'); $('look-toggle').textContent = $('look').classList.contains('collapsed') ? '▴' : '▾'; };
+  // collapsed by default; remember the last choice
+  const setLook = (open) => { $('look').classList.toggle('collapsed', !open); $('look-toggle').textContent = open ? '▾' : '▴'; };
+  setLook(!!prefs.lookOpen);
+  $('look-toggle').onclick = () => { prefs.lookOpen = $('look').classList.contains('collapsed'); savePrefs(); setLook(prefs.lookOpen); };
+  document.querySelector('.look-head').addEventListener('click', (e) => { if (e.target.id !== 'look-toggle') $('look-toggle').click(); });
 
-  $('btn-download').onclick = () => cache.download();
+  $('btn-download').onclick = async () => {
+    if (!navigator.onLine) { log('Offline: connect to Wi-Fi first (this downloads from the site).'); return; }
+    log('Checking what is missing…');
+    log(await cache.download());
+  };
+  // iOS freezes downloads in the background; pick up again when the app comes back
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && navigator.onLine && cache && cache.state.phase !== 'ready') cache.download().catch(() => {});
+  });
   $('btn-verify').onclick = async () => {
     log('Verifying…');
     const bad = await cache.verify();
@@ -524,6 +554,7 @@ async function boot() {
     if (phase !== 'ready' && !navigator.onLine) showError(`Offline and the cache is incomplete (${cache.state.missing.length} files missing). Parts of the map or features will be blank.`, 'incomplete');
   } catch (e) { showError(`Cache check failed: ${e.message}`); }
 
+  setInterval(() => { if (cache.state.phase === 'downloading') renderCache(cache.state); }, 2000);
   setInterval(() => { renderGpsChip(); estimateTick(); if (S.source === 'manual' && manual.running) manual.save(); }, 5000);
   setInterval(() => { if (!clock.simulated) setSource('night', nightFC(clock.now())); }, 60000);
   setInterval(() => { if (clock.simulated) setSource('night', nightFC(clock.now())); }, 2000);

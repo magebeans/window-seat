@@ -66,7 +66,7 @@ export class PoiStore {
  * Returns up to n items sorted by along-track distance:
  *   { poi, side: 'L'|'R', xt (km, abeam distance), at (km ahead), d (km now), eta (min|null) }
  */
-export function lookList(pois, pos, heading, speedKmh, { n = 10, radiusKm = 150, horizonMin = 75, passedKm = 15 } = {}) {
+export function lookList(pois, pos, heading, speedKmh, { n = 10, radiusKm = 250, horizonMin = 75, passedKm = 15 } = {}) {
   const v = speedKmh && speedKmh > 150 ? speedKmh : null;
   const horizonKm = (v || 850) * (horizonMin / 60);
   const cand = [];

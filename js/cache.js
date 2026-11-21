@@ -17,6 +17,7 @@ export class OfflineCache {
     this.manifest = null;
     this.state = { phase: 'checking', doneBytes: 0, totalBytes: 0, doneFiles: 0, totalFiles: 0, errors: [], missing: [] };
     this.running = false;
+    this.lastProgress = 0;
   }
 
   emit(patch) { Object.assign(this.state, patch); this.onChange?.(this.state); }
@@ -48,44 +49,75 @@ export class OfflineCache {
     return { missing, phase };
   }
 
-  async download({ concurrency = 3 } = {}) {
-    if (this.running) return;
+  /**
+   * Fetch every missing file. Returns a short human-readable outcome.
+   * Safe to call repeatedly: a run that is still making progress is left alone; one that has stalled
+   * (iOS freezes fetches when the app is backgrounded, and they may never settle) is abandoned and a
+   * fresh run starts. Every file has its own timeout, so a run cannot hang forever.
+   */
+  async download({ concurrency = 3, force = false } = {}) {
+    const stalled = this.running && Date.now() - this.lastProgress > 30000;
+    if (this.running && !stalled && !force) {
+      return `Already downloading: ${this.state.doneFiles} of ${this.state.totalFiles} files`;
+    }
+    if (this.running) this.abort?.abort(); // abandon the stalled run
+    const token = {};
+    this.runToken = token;
+    const ctl = new AbortController();
+    this.abort = ctl;
     this.running = true;
+    this.lastProgress = Date.now();
+    const live = () => this.runToken === token;
     try {
+      if (!this.manifest || force) await this.loadManifest();
       const { missing } = await this.status();
-      if (!missing.length) return;
+      if (!missing.length) return `Nothing missing: all ${this.manifest.entries.length} files are cached ✓`;
       this.emit({ phase: 'downloading', errors: [] });
       const shell = await caches.open(shellName(this.manifest.version));
       const data = await caches.open(DATA);
       const queue = [...missing];
       const errors = [];
       const one = async (e) => {
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 3 && live(); attempt++) {
+          const t = new AbortController();
+          const kill = () => t.abort();
+          ctl.signal.addEventListener('abort', kill);
+          const timer = setTimeout(kill, 60000 + e.size / 50); // 60 s + 50 kB/s floor
           try {
-            const r = await fetch(e.url, { cache: 'no-store', headers: { 'x-ws-download': '1' } });
+            const r = await fetch(e.url, { cache: 'no-store', headers: { 'x-ws-download': '1' }, signal: t.signal });
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const buf = await r.arrayBuffer();
             if (buf.byteLength !== e.size) throw new Error(`size ${buf.byteLength} != ${e.size}`);
             const hash = await sha256hex(buf);
             if (hash !== e.sha256) throw new Error('sha256 mismatch');
+            if (!live()) return;
             const type = r.headers.get('Content-Type') || 'application/octet-stream';
             const res = new Response(buf, { headers: { 'Content-Type': type, 'Content-Length': String(e.size), 'X-SHA256': hash } });
             await (e.group === 'shell' ? shell : data).put(new URL(e.url, location.href).href, res);
+            this.lastProgress = Date.now();
             this.emit({ doneBytes: this.state.doneBytes + e.size, doneFiles: this.state.doneFiles + 1 });
             return;
           } catch (err) {
-            if (attempt === 2) { errors.push(`${decodeURIComponent(e.url)}: ${err.message}`); this.emit({ errors: [...errors] }); }
+            if (!live()) return;
+            const why = err.name === 'AbortError' ? 'timed out' : err.message;
+            if (attempt === 2) { errors.push(`${decodeURIComponent(e.url)}: ${why}`); this.emit({ errors: [...errors] }); }
             else await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+          } finally {
+            clearTimeout(timer);
+            ctl.signal.removeEventListener('abort', kill);
           }
         }
       };
-      await Promise.all(Array.from({ length: concurrency }, async () => { while (queue.length) await one(queue.shift()); }));
+      await Promise.all(Array.from({ length: concurrency }, async () => { while (queue.length && live()) await one(queue.shift()); }));
+      if (!live()) return 'Restarted';
       const st = await this.status();
-      if (st.phase === 'ready') await this.prune();
+      if (st.phase === 'ready') { await this.prune(); return 'Download complete: ready for offline ✓'; }
+      return `${st.missing.length} files still missing${errors.length ? ` (${errors.length} failed; see log)` : ''}. Tap again to retry.`;
     } catch (err) {
-      this.emit({ phase: 'error', errors: [...this.state.errors, String(err.message || err)] });
+      if (live()) this.emit({ phase: 'error', errors: [...this.state.errors, String(err.message || err)] });
+      return `Download failed: ${err.message || err}`;
     } finally {
-      this.running = false;
+      if (live()) this.running = false;
     }
   }
 
