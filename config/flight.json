@@ -1,8 +1,8 @@
 {
   "flight": "QR720",
-  "_departure_note": "PLACEHOLDER DATE: set your real date. Scheduled time is ~16:25 PST; confirm with Qatar Airways.",
-  "departure": "2026-12-05T16:25:00-08:00",
-  "block_minutes": 915,
+  "_departure_note": "From the Alaska schedule-change email (2026-11-13) and reminder (2026-11-18): SEA 15:50 PST -> DOH 17:50 (+1)",
+  "departure": "2026-11-21T15:50:00-08:00",
+  "block_minutes": 900,
   "taxi_out_minutes": 20,
   "taxi_in_minutes": 10,
   "climb_minutes": 25,
