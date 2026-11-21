@@ -145,9 +145,9 @@ def manifest():
     skip = {"precache.json", "sw.js"}
     entries = []
     for p in sorted(WEB.rglob("*")):
-        if not p.is_file() or p.name.startswith(".") or p.name in skip:
-            continue
         rel = p.relative_to(WEB).as_posix()
+        if not p.is_file() or any(part.startswith(".") for part in rel.split("/")) or p.name in skip:
+            continue
         if rel.startswith("js/sw-template"):
             continue
         group = "shell" if rel.startswith(SHELL_PREFIXES) else "data"
