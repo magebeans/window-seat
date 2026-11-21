@@ -90,6 +90,7 @@ try {
   const items = await page.$$eval('#look-list li:not(.empty)', (lis) => lis.map((li) => li.innerText.replace(/\s+/g, ' ')));
   ok('look list populated (sim at T+640 min)', items.length >= 3, `${items.length} items; first: ${items[0] || '-'}`);
   if (items.length) {
+    if (await page.evaluate(() => document.getElementById('look').classList.contains('collapsed'))) await page.click('#look-toggle');
     await page.click('#look-list li:not(.empty)');
     const txt = await page.textContent('#info-text');
     ok('POI summary opens offline', txt && txt.length > 40, `${(await page.textContent('#info-title')).trim()}: ${txt.slice(0, 80)}…`);

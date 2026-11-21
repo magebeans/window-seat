@@ -42,7 +42,7 @@
   "budget_mb": 3000,
   "protomaps_build": "latest",
   "pois": {
-    "min_sitelinks": 6,
+    "min_sitelinks": 12,
     "rank_by": "length",
     "min_views": 300,
     "min_length": 3000,

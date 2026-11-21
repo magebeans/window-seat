@@ -126,42 +126,42 @@ def print_plan(jobs, sizes, budget):
 
 def merge(parts, out):
     """Union of tiles from several archives of the same build. Identical tile ids carry identical bytes,
-    so the first archive that has a tile wins."""
+    so the first archive that has a tile wins. Each archive is read once, sequentially, into memory
+    (a few GB at most); per-tile lookups re-read leaf directories and were ~100x slower."""
     from pmtiles.reader import MmapSource, Reader, all_tiles
     from pmtiles.tile import zxy_to_tileid
     from pmtiles.writer import Writer
 
-    readers, owner = [], {}
-    handles = []
+    tiles, headers, meta = {}, [], None
     for p in parts:
-        fh = open(p, "rb")
-        handles.append(fh)
-        src = MmapSource(fh)
-        rd = Reader(src)
-        readers.append(rd)
-        for (z, x, y), _ in all_tiles(src):
-            owner.setdefault(zxy_to_tileid(z, x, y), (len(readers) - 1, z, x, y))
-    h0 = readers[0].header()
-    meta = readers[0].metadata()
+        with open(p, "rb") as fh:
+            src = MmapSource(fh)
+            rd = Reader(src)
+            headers.append(rd.header())
+            if meta is None:
+                meta = rd.metadata()
+            n = 0
+            for (z, x, y), data in all_tiles(src):
+                tid = zxy_to_tileid(z, x, y)
+                if tid not in tiles:
+                    tiles[tid] = bytes(data)
+                    n += 1
+        print(f"    read {Path(p).name}: +{n} tiles", flush=True)
+    h0 = headers[0]
     with open(out, "wb") as f:
         w = Writer(f)
-        for tid in sorted(owner):
-            i, z, x, y = owner[tid]
-            w.write_tile(tid, readers[i].get(z, x, y))
-        minz = min(r.header()["min_zoom"] for r in readers)
-        maxz = max(r.header()["max_zoom"] for r in readers)
+        for tid in sorted(tiles):
+            w.write_tile(tid, tiles[tid])
         header = {
             "tile_type": h0["tile_type"], "tile_compression": h0["tile_compression"],
-            "min_zoom": minz, "max_zoom": maxz,
+            "min_zoom": min(h["min_zoom"] for h in headers), "max_zoom": max(h["max_zoom"] for h in headers),
             "min_lon_e7": -1800000000, "min_lat_e7": -850511290, "max_lon_e7": 1800000000, "max_lat_e7": 850511290,
             "center_zoom": 3, "center_lon_e7": 0, "center_lat_e7": 0,
         }
         meta = dict(meta or {})
         meta["window-seat"] = "corridor extract; zooms vary by segment"
         w.finalize(header, meta)
-    for fh in handles:
-        fh.close()
-    return len(owner)
+    return len(tiles)
 
 
 def split(archive: Path):
@@ -197,6 +197,7 @@ def main():
     ap.add_argument("--fit", action="store_true", help="lower region zooms until the total fits budget_mb")
     ap.add_argument("--override", action="append", default=[], help="REGION=MAXZOOM, e.g. 5=11")
     ap.add_argument("--build", help="Protomaps build key or URL (default: config protomaps_build)")
+    ap.add_argument("--merge-only", action="store_true", help="reuse the extracts already in build/basemap/")
     a = ap.parse_args()
 
     cfg = json.loads(a.config.read_text())
@@ -232,8 +233,9 @@ def main():
     parts = []
     for j in jobs:
         out = BUILD / f"{j['name']}.pmtiles"
-        print(f"  extracting {j['name']:8} z{j['minzoom']}-{j['maxzoom']} ~{sizes[j['name']] / MB:.0f} MB ...", flush=True)
-        run_extract(url, j, out, False)
+        if not a.merge_only:
+            print(f"  extracting {j['name']:8} z{j['minzoom']}-{j['maxzoom']} ~{sizes[j['name']] / MB:.0f} MB ...", flush=True)
+            run_extract(url, j, out, False)
         parts.append(out)
     merged = BUILD / "basemap.pmtiles"
     n = merge(parts, merged)

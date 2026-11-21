@@ -425,7 +425,11 @@ function bindUI() {
     $('btn-trackup').classList.toggle('on', S.trackUp);
     if (!S.trackUp) map.easeTo({ bearing: 0 }); else update();
   };
-  $('look-toggle').onclick = () => { $('look').classList.toggle('collapsed'); $('look-toggle').textContent = $('look').classList.contains('collapsed') ? '▴' : '▾'; };
+  // collapsed by default; remember the last choice
+  const setLook = (open) => { $('look').classList.toggle('collapsed', !open); $('look-toggle').textContent = open ? '▾' : '▴'; };
+  setLook(!!prefs.lookOpen);
+  $('look-toggle').onclick = () => { prefs.lookOpen = $('look').classList.contains('collapsed'); savePrefs(); setLook(prefs.lookOpen); };
+  document.querySelector('.look-head').addEventListener('click', (e) => { if (e.target.id !== 'look-toggle') $('look-toggle').click(); });
 
   $('btn-download').onclick = () => cache.download();
   $('btn-verify').onclick = async () => {
