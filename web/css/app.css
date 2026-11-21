@@ -85,13 +85,14 @@ button.mini { background: var(--bg); padding: 0 10px; height: 34px; border-radiu
 .when.now b { color: var(--accent); }
 
 .sheet { position: fixed; z-index: 10; left: 0; right: 0; bottom: 0; max-height: 75vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  background: #161c32; border-radius: 18px 18px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
+  max-height: calc(100dvh - var(--st) - 110px); background: #161c32; border-radius: 18px 18px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
   padding: 18px calc(var(--sr) + 18px) calc(var(--sb) + 22px) calc(var(--sl) + 18px); }
-.sheet.tall { max-height: 88vh; }
+.sheet.tall { max-height: calc(100dvh - var(--st) - 110px); }
 #settings { z-index: 40; }
 .sheet h2 { margin: 18px 0 8px; font-size: 17px; }
 .sheet h2:first-of-type { margin-top: 0; }
-.sheet .close { position: sticky; float: right; top: 0; background: #2b3557; border-radius: 50%; width: 32px; height: 32px; padding: 0; }
+.sheet .close { position: sticky; top: 0; z-index: 2; display: inline-block; margin: 0 0 8px; padding: 7px 14px; border-radius: 999px; background: #2b3557; font-weight: 600; }
+.sheet .done { display: block; width: 100%; margin-top: 18px; padding: 13px; font-weight: 600; }
 #info-meta { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
 #info-text { font-size: 15.5px; line-height: 1.5; }
 .fine { color: var(--muted); font-size: 12.5px; }

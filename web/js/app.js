@@ -175,6 +175,7 @@ function initMap() {
     if (/AbortError|aborted/i.test(m)) return;
     showError(`Map: ${m}`, `map:${m.slice(0, 60)}`);
   });
+  map.on('click', () => { $('settings').hidden = true; });
   const stopFollow = () => { if (S.follow) { S.follow = false; $('btn-follow').classList.remove('on'); } };
   map.on('dragstart', stopFollow);
   map.on('click', 'ws-pois', (e) => { const id = e.features[0]?.properties.id; if (id) openInfo(id); });
