@@ -91,23 +91,41 @@ async function setupServiceWorker() {
 
 // ---------------------------------------------------------------- cache UI
 
+// rolling download rate: bytes landed in the cache over the last ~10 s (files arrive 4 MB at a time,
+// so an instantaneous figure would jump between 0 and huge)
+const rate = { samples: [] };
+function speedText(st) {
+  const now = Date.now(), s = rate.samples;
+  s.push([now, st.doneBytes]);
+  while (s.length > 2 && now - s[0][0] > 10000) s.shift();
+  if (s.length < 2 || now - s[0][0] < 2000) return ' · measuring speed…';
+  const bps = (s.at(-1)[1] - s[0][1]) / ((now - s[0][0]) / 1000);
+  if (bps <= 0) return ' · stalled? (tap Download missing to restart)';
+  const left = (st.totalBytes - st.doneBytes) / bps;
+  const eta = left < 90 ? `${Math.round(left)} s` : left < 5400 ? `${Math.round(left / 60)} min` : `${(left / 3600).toFixed(1)} h`;
+  return ` · ${(bps / 1e6).toFixed(1)} MB/s · ~${eta} left`;
+}
+
 function renderCache(st) {
   const line = $('cache-line'), dot = $('cache-dot');
   $('cache-progress').value = st.totalBytes ? st.doneBytes / st.totalBytes : 0;
   $('version').textContent = st.version || '—';
   const mb = `${fmtMB(st.doneBytes)} of ${fmtMB(st.totalBytes)} cached`;
   line.className = 'big';
+  if (st.phase !== 'downloading') rate.samples = [];
   if (st.phase === 'ready') {
     line.textContent = `${mb}, ready for offline ✓`; line.classList.add('ready'); dot.className = 'badge ok';
   } else if (st.phase === 'downloading') {
-    line.textContent = `${mb} (${st.doneFiles}/${st.totalFiles} files)…`; dot.className = 'badge busy';
+    line.textContent = `${mb} (${st.doneFiles}/${st.totalFiles} files)${speedText(st)}`; dot.className = 'badge busy';
   } else if (st.phase === 'checking') {
     line.textContent = 'Checking cache…'; dot.className = 'badge busy';
   } else {
     line.textContent = `${mb}: NOT ready for offline (${st.missing.length} files missing)`; line.classList.add('bad'); dot.className = 'badge';
   }
   $('start-cache').textContent = line.textContent;
-  if (st.errors?.length) log(st.errors.slice(-5).join('\n'));
+  const errKey = (st.errors || []).join('|');
+  if (errKey && errKey !== rate.lastErr) log(st.errors.slice(-5).join('\n'));
+  rate.lastErr = errKey;
 }
 const logLines = [];
 function log(msg) { logLines.push(msg); $('cache-log').textContent = logLines.slice(-30).join('\n'); }
@@ -536,6 +554,7 @@ async function boot() {
     if (phase !== 'ready' && !navigator.onLine) showError(`Offline and the cache is incomplete (${cache.state.missing.length} files missing). Parts of the map or features will be blank.`, 'incomplete');
   } catch (e) { showError(`Cache check failed: ${e.message}`); }
 
+  setInterval(() => { if (cache.state.phase === 'downloading') renderCache(cache.state); }, 2000);
   setInterval(() => { renderGpsChip(); estimateTick(); if (S.source === 'manual' && manual.running) manual.save(); }, 5000);
   setInterval(() => { if (!clock.simulated) setSource('night', nightFC(clock.now())); }, 60000);
   setInterval(() => { if (clock.simulated) setSource('night', nightFC(clock.now())); }, 2000);

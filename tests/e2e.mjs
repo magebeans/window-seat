@@ -40,6 +40,8 @@ try {
   // ---------------------------------------------------------------- online: install + download
   await page.goto(URL0);
   await page.waitForFunction(() => window.__ws?.cache(), null, { timeout: 30000 });
+  await page.waitForFunction(() => /MB\/s · ~/.test(document.getElementById('cache-line').textContent), null, { timeout: 60000 }).catch(() => {});
+  ok('download shows speed and time left', /MB\/s · ~/.test(await page.textContent('#cache-line')) || (await page.evaluate(() => window.__ws.cache().state.phase)) === 'ready', await page.textContent('#cache-line'));
   const t0 = Date.now();
   await page.waitForFunction(() => window.__ws.cache().state.phase === 'ready', null, { timeout: 600000, polling: 1000 });
   const st = await page.evaluate(() => window.__ws.cache().state);
