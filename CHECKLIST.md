@@ -14,7 +14,7 @@ Do this on Wi-Fi, the evening before. It takes about 15 minutes, most of it the 
 - [ ] Open the app from the icon. On the start card, the line under the flight should change to
       `… cached, ready for offline ✓`. If it is still counting, leave the app open with the screen
       on until it finishes.
-- [ ] Tap ⚙︎ and check:
+- [ ] Tap **Offline status & settings** on the start card (or ⚙︎ once started) and check:
   - [ ] **Display mode** says *standalone (home screen) ✓*.
   - [ ] The status line is green: `314 MB of 314 MB cached, ready for offline ✓` (the exact size
         depends on the build).
