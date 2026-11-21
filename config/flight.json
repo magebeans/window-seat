@@ -7,13 +7,21 @@
   "taxi_in_minutes": 10,
   "climb_minutes": 25,
   "descent_minutes": 30,
-  "origin": { "iata": "SEA", "name": "Seattle-Tacoma International", "lat": 47.4490, "lon": -122.3093 },
-  "destination": { "iata": "DOH", "name": "Hamad International", "lat": 25.2731, "lon": 51.6081 },
-
+  "origin": {
+    "iata": "SEA",
+    "name": "Seattle-Tacoma International",
+    "lat": 47.449,
+    "lon": -122.3093
+  },
+  "destination": {
+    "iata": "DOH",
+    "name": "Hamad International",
+    "lat": 25.2731,
+    "lon": 51.6081
+  },
   "corridor_km": 300,
   "max_corridor_km": 900,
   "segment_km": 250,
-
   "zoom": {
     "_note": "maxzoom per corridor segment, chosen by daylight (sun at the segment while you pass it) and land fraction",
     "world": 4,
@@ -21,7 +29,7 @@
     "wide_km": 1200,
     "day_land": 12,
     "twilight_land": 12,
-    "night_land": 10,
+    "night_land": 11,
     "day_water": 8,
     "night_water": 6,
     "airport": 13,
@@ -29,12 +37,10 @@
     "water_threshold": 0.85
   },
   "zoom_overrides": {
-    "_note": "keys are region labels from `scripts/build.sh plan`; Europe at z12 is 669 MB, z11 ~330, z10 157",
-    "km 7255-10015": 10
+    "_note": "keys are region labels from `scripts/build.sh plan`; empty = zooms from the rules above"
   },
-  "budget_mb": 400,
+  "budget_mb": 950,
   "protomaps_build": "latest",
-
   "pois": {
     "min_sitelinks": 6,
     "rank_by": "pageviews",
@@ -45,5 +51,6 @@
     "max_total": 5000,
     "summary_chars": 600,
     "chunk_km": 600
-  }
+  },
+  "_budget_note": "GitHub Pages limits a site to 1 GB; this leaves room for fonts, POIs and the app"
 }

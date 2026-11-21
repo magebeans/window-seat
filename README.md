@@ -65,7 +65,7 @@ Steps can be run on their own. Each one reads the output of the one before it:
 
 Zoom is chosen per ~250 km segment from the sun at that point when you pass it and from how much of
 the corridor is water (`zoom` in the config). Current defaults: day land z12, twilight land z12,
-night land z10, day water z8, night water z6. The whole planet is included at z0–4 and a 1,200 km
+night land z11, day water z8, night water z6. The whole planet is included at z0–4 and a 1,200 km
 band at z5–6, so the map is never blank. Each airport gets z13 within 40 km.
 
 ```bash
@@ -76,9 +76,9 @@ scripts/build.sh basemap --override 4=11    # build with that
 ```
 
 For a lasting change, edit `zoom` (or add `"zoom_overrides": {"km 7194-10165": 11}`) in the
-config. With the placeholder date, daylight covers Norway → Iraq. Europe at z12 would be 669 MB on
-its own, so `zoom_overrides` puts km 7255–10015 at z10 (157 MB; z11 is ~330 MB). Turkey and Iraq
-stay at z12. The basemap is **352 MB** and the whole site **366 MB** (909 files).
+config. With the real schedule (2026-11-21 15:50), daylight covers Norway → Iraq; all of it is z12
+and night land is z11. The basemap is **911 MB** and the site **925 MB** (1,043 files), just under
+GitHub Pages' 1 GB site limit. More than that needs other hosting (see `budget_mb`).
 
 ### POIs
 
