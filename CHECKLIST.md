@@ -16,7 +16,7 @@ Do this on Wi-Fi, the evening before. It takes about 15 minutes, most of it the 
       on until it finishes.
 - [ ] Tap ⚙︎ and check:
   - [ ] **Display mode** says *standalone (home screen) ✓*.
-  - [ ] The status line is green: `318 MB of 318 MB cached, ready for offline ✓` (the exact size
+  - [ ] The status line is green: `314 MB of 314 MB cached, ready for offline ✓` (the exact size
         depends on the build).
   - [ ] **Persistent storage** says *granted ✓*. If it says *not granted*, the data can still stay;
         iOS rarely evicts home-screen apps, but it is worth knowing.

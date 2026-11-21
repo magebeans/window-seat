@@ -5,7 +5,7 @@ live GPS position, the planned route and corridor, a "look left / look right" li
 features coming up, a day/night line, a daylight timeline for the whole flight, and short offline
 Wikipedia summaries. After one download it makes **no network requests at all**.
 
-Built for QR720 SEA → DOH. Everything flight-specific is in [`config/flight.json`](config/flight.json).
+Built for QR720 SEA → DOH. Live at **https://magebeans.github.io/window-seat/**. Everything flight-specific is in [`config/flight.json`](config/flight.json).
 
 ```
 config/flight.json   flight, schedule, corridor width, zoom rules, size budget, POI settings
@@ -79,7 +79,7 @@ scripts/build.sh basemap --override 4=11    # build with that
 ```
 
 For a lasting change, edit `zoom` (or add `"zoom_overrides": {"km 7194-10165": 11}`) in the
-config. With the placeholder date the basemap is **300 MB** and the whole site is about **318 MB**.
+config. With the placeholder date the basemap is **300 MB** and the whole site is about **314 MB** (895 files).
 
 ### POIs
 
