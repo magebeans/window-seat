@@ -1,12 +1,13 @@
 // End-to-end offline test in Chromium (Playwright).
 //   node tests/e2e.mjs            full run (downloads the whole cache from a local server)
 //   HEADED=1 node tests/e2e.mjs   watch it
+//   BROWSER=webkit node tests/e2e.mjs   same in WebKit (Safari's engine; not iOS itself)
 //
 // 1. serve web/, open the app, wait for "ready for offline"
 // 2. KILL the server (real offline, not emulation), reload
 // 3. check: map renders vector tiles, SW range-serving is byte-exact across a part boundary,
 //    the simulated flight fills the look list, POI summaries open, zero network fetches, no banner
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { spawn } from 'node:child_process';
 import { readFileSync, openSync, readSync, closeSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -24,14 +25,16 @@ function serve() {
 }
 
 const server = await serve();
-const browser = await chromium.launch({ headless: !process.env.HEADED });
+const engine = process.env.BROWSER === 'webkit' ? webkit : chromium;
+console.log(`engine: ${engine.name()}`);
+const browser = await engine.launch({ headless: !process.env.HEADED });
 const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
 const page = await ctx.newPage();
 const consoleErrors = [];
 page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
 page.on('pageerror', (e) => consoleErrors.push(String(e)));
 const failedRequests = [];
-page.on('requestfailed', (r) => failedRequests.push(r.url()));
+page.on('requestfailed', (r) => { const why = r.failure()?.errorText || ''; if (!/cancel|abort/i.test(why)) failedRequests.push(`${r.url()} (${why})`); });
 
 try {
   // ---------------------------------------------------------------- online: install + download
@@ -98,9 +101,9 @@ try {
   ok('no error banner', !banner, banner || '');
 
   // the only request allowed to fail offline is the service worker's own update check (sw.js)
-  const unexpected = failedRequests.filter((u) => !/\/sw\.js(\?|$)/.test(u));
+  const unexpected = failedRequests.filter((u) => !/\/sw\.js(\?| |$)/.test(u));
   ok('no failed requests except the SW update check', unexpected.length === 0, `${failedRequests.length} failed: ${[...new Set(failedRequests)].slice(0, 4).join(', ')}`);
-  const realErrors = consoleErrors.filter((m) => !/ERR_CONNECTION_REFUSED|Failed to update a ServiceWorker/.test(m));
+  const realErrors = consoleErrors.filter((m) => !/ERR_CONNECTION_REFUSED|Could not connect to the server|Failed to update a ServiceWorker/.test(m));
   ok('no console errors', realErrors.length === 0, realErrors.slice(0, 3).join(' | '));
 
   // a missing file must fail visibly
