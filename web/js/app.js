@@ -162,6 +162,13 @@ function initMap() {
     fadeDuration: 0,
   });
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+  // iOS home-screen apps do not always report size changes (rotation, status bar), leaving the
+  // canvas at the old size with dark bands around it. Re-measure on every hint, twice.
+  const refit = () => { map.resize(); setTimeout(() => map.resize(), 350); };
+  for (const ev of ['resize', 'orientationchange', 'pageshow']) window.addEventListener(ev, refit);
+  window.visualViewport?.addEventListener('resize', refit);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refit(); });
+  new ResizeObserver(refit).observe(document.documentElement);
   map.on('styleimagemissing', (e) => { if (e.id === 'ws-plane' && !map.hasImage('ws-plane')) map.addImage('ws-plane', planeImage().data, { pixelRatio: 2 }); });
   map.on('error', (e) => {
     const m = e.error?.message || String(e.error || 'map error');

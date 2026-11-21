@@ -109,18 +109,20 @@ async function fromCaches(path) {
 async function cacheFirst(request, path) {
   const hit = await fromCaches(path);
   if (hit) return hit;
-  // Uncached glyph ranges (scripts the basemap fonts do not cover): an empty PBF is a valid
-  // "no glyphs here" answer, so labels in that script are skipped instead of erroring.
-  if (/^fonts\/.+\/\d+-\d+\.pbf$/.test(decodeURIComponent(path))) {
-    return new Response(new Uint8Array(0), { headers: { 'Content-Type': 'application/x-protobuf' } });
-  }
+  const glyph = /^fonts\/.+\/\d+-\d+\.pbf$/.test(decodeURIComponent(path));
   try {
     const r = await fetch(request);
     broadcast({ type: 'net', path, status: r.status });
-    return r;
+    if (r.ok || !glyph) return r;
   } catch (e) {
-    return missing(path, 'not in cache and the network is unreachable');
+    if (!glyph) return missing(path, 'not in cache and the network is unreachable');
   }
+  // A glyph range we cannot get (a script the fonts do not cover, or offline before the fonts were
+  // downloaded): an empty PBF means "no glyphs here", so those labels are skipped instead of erroring.
+  // Only after trying the network: answering empty first would blank every label while the fonts
+  // are still downloading, and MapLibre keeps that answer for the rest of the session.
+  broadcast({ type: 'miss', path, why: 'glyph range not cached; labels in it are skipped' });
+  return new Response(new Uint8Array(0), { headers: { 'Content-Type': 'application/x-protobuf' } });
 }
 
 // ------------------------------------------------------------- PMTiles range serving

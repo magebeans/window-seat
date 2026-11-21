@@ -66,6 +66,10 @@ try {
   const feats = await page.evaluate(() => window.__ws.map().queryRenderedFeatures().filter((f) => f.source === 'protomaps').length);
   ok('vector tiles render offline', feats > 50, `${feats} rendered basemap features`);
 
+  // labels must actually draw (glyphs served offline): placed text symbols from the basemap
+  const labels = await page.evaluate(() => window.__ws.map().queryRenderedFeatures().filter((f) => f.source === 'protomaps' && f.layer.type === 'symbol' && f.layer.layout?.['text-field']).length);
+  ok('basemap labels render offline', labels > 3, `${labels} labelled features`);
+
   // byte-exact Range across a 4 MiB part boundary vs the merged archive on disk
   const bm = JSON.parse(readFileSync(path.join(ROOT, 'web/data/basemap.json')));
   const start = bm.chunkSize - 37, len = 101;
