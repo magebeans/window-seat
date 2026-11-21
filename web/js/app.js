@@ -431,7 +431,15 @@ function bindUI() {
   $('look-toggle').onclick = () => { prefs.lookOpen = $('look').classList.contains('collapsed'); savePrefs(); setLook(prefs.lookOpen); };
   document.querySelector('.look-head').addEventListener('click', (e) => { if (e.target.id !== 'look-toggle') $('look-toggle').click(); });
 
-  $('btn-download').onclick = () => cache.download();
+  $('btn-download').onclick = async () => {
+    if (!navigator.onLine) { log('Offline: connect to Wi-Fi first (this downloads from the site).'); return; }
+    log('Checking what is missing…');
+    log(await cache.download());
+  };
+  // iOS freezes downloads in the background; pick up again when the app comes back
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && navigator.onLine && cache && cache.state.phase !== 'ready') cache.download().catch(() => {});
+  });
   $('btn-verify').onclick = async () => {
     log('Verifying…');
     const bad = await cache.verify();

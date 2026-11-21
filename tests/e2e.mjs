@@ -51,6 +51,22 @@ try {
   const bad = await page.evaluate(() => window.__ws.cache().verify());
   ok('verify: all present', bad.length === 0, bad.slice(0, 3).join('; '));
 
+  // "Download missing" really restores deleted files, and says so when there is nothing to do
+  await page.evaluate(async () => {
+    const c = await caches.open('ws-data');
+    const keys = (await c.keys()).filter((r) => /tiles|fonts/.test(r.url)).slice(0, 8);
+    for (const k of keys) await c.delete(k);
+    await window.__ws.cache().status();
+  });
+  const before = await page.evaluate(() => window.__ws.cache().state.missing.length);
+  await page.click('#btn-download');
+  await page.waitForFunction(() => /Download complete/.test(document.getElementById('cache-log').textContent), null, { timeout: 120000 });
+  const after = await page.evaluate(async () => (await window.__ws.cache().status()).missing.length);
+  ok('Download missing restores deleted files', before === 8 && after === 0, `${before} missing -> ${after}`);
+  await page.click('#btn-download');
+  await page.waitForFunction(() => /Nothing missing/.test(document.getElementById('cache-log').textContent), null, { timeout: 30000 });
+  ok('Download missing reports when nothing is missing', true);
+
   // ---------------------------------------------------------------- offline
   server.kill();
   await new Promise((r) => setTimeout(r, 500));
