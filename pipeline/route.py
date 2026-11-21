@@ -327,7 +327,7 @@ def build(cfg, track_files, out_route, out_segments, countries_path):
     print(f"\n  {'km':>11}  {'t+min':>9}  {'light':9} {'water':>5}  z  over")
     for s in segs:
         print(f"  {s['km0']:5}-{s['km1']:<5}  {s['t0']:4}-{s['t1']:<4}  {s['light']:9} {s['water']:5.2f}  {s['maxzoom']:2} {s['country']}")
-    print(f"\n  {len(regions)} zoom regions -> {out_segments.relative_to(ROOT)}")
+    print(f"\n  {len(regions)} zoom regions -> {out_segments}")
     return route
 
 

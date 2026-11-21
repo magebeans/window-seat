@@ -279,7 +279,7 @@ function fmtEta(it) {
 function renderLook() {
   const ul = $('look-list');
   if (!S.look.length) {
-    ul.innerHTML = `<li class="empty">${pois.loaded.size ? 'Nothing notable within 150 km ahead. Open ocean or ice, most likely.' : 'Loading features…'}</li>`;
+    ul.innerHTML = `<li class="empty">${pois.loaded.size ? 'Nothing notable within 250 km ahead. Open ocean or ice, most likely.' : 'Loading features…'}</li>`;
     return;
   }
   ul.innerHTML = '';

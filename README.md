@@ -157,6 +157,19 @@ of tiles never builds up in history) and enables Pages on first run. `main` hold
 generated data is git-ignored. Every file stays under GitHub's 100 MB limit, and the site stays
 under Pages' 1 GB limit.
 
+## Local deploy (bigger data)
+
+GitHub Pages caps a site at 1 GB. The full build (z13 by day, z12 at night, 500 km corridor;
+~2.8 GB) is served from the home Docker stack instead, at **https://window.magehome.duckdns.org**
+(nginx container `window-seat` in `~/Web`, behind Traefik with the wildcard cert, LAN DNS via pihole).
+
+```bash
+scripts/build.sh && scripts/deploy-local.sh    # stages web/ into build/site, which nginx serves
+```
+
+Install from home Wi-Fi. Once cached, the phone never needs the server again. It is a different
+origin from the GitHub Pages copy, so it is a separate Home Screen app with its own storage.
+
 ## Install on the iPhone
 
 1. In **Safari**, open the Pages URL.

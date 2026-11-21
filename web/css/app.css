@@ -94,7 +94,7 @@ button.mini { background: var(--bg); padding: 0 10px; height: 34px; border-radiu
 .sheet .close { position: sticky; top: 0; z-index: 2; display: inline-block; margin: 0 0 8px; padding: 7px 14px; border-radius: 999px; background: #2b3557; font-weight: 600; }
 .sheet .done { display: block; width: 100%; margin-top: 18px; padding: 13px; font-weight: 600; }
 #info-meta { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-#info-text { font-size: 15.5px; line-height: 1.5; }
+#info-text { font-size: 15.5px; line-height: 1.5; white-space: pre-line; }
 .fine { color: var(--muted); font-size: 12.5px; }
 .big { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
 .big.ready { color: var(--ok); }

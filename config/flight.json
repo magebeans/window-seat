@@ -19,17 +19,17 @@
     "lat": 25.2731,
     "lon": 51.6081
   },
-  "corridor_km": 300,
-  "max_corridor_km": 900,
+  "corridor_km": 500,
+  "max_corridor_km": 1000,
   "segment_km": 250,
   "zoom": {
     "_note": "maxzoom per corridor segment, chosen by daylight (sun at the segment while you pass it) and land fraction",
     "world": 4,
     "wide": 6,
-    "wide_km": 1200,
-    "day_land": 12,
-    "twilight_land": 12,
-    "night_land": 11,
+    "wide_km": 1600,
+    "day_land": 13,
+    "twilight_land": 13,
+    "night_land": 12,
     "day_water": 8,
     "night_water": 6,
     "airport": 13,
@@ -39,18 +39,18 @@
   "zoom_overrides": {
     "_note": "keys are region labels from `scripts/build.sh plan`; empty = zooms from the rules above"
   },
-  "budget_mb": 950,
+  "budget_mb": 3000,
   "protomaps_build": "latest",
   "pois": {
     "min_sitelinks": 6,
-    "rank_by": "pageviews",
+    "rank_by": "length",
     "min_views": 300,
-    "min_length": 2500,
+    "min_length": 3000,
     "_min_views_note": "English Wikipedia page views over 60 days; below this a feature is too obscure to list",
-    "per_100km": 14,
-    "max_total": 5000,
-    "summary_chars": 600,
+    "per_100km": 40,
+    "max_total": 8000,
+    "summary_chars": 1500,
     "chunk_km": 600
   },
-  "_budget_note": "GitHub Pages limits a site to 1 GB; this leaves room for fonts, POIs and the app"
+  "_budget_note": "local (Traefik) deploy; GitHub Pages caps a site at 1 GB"
 }

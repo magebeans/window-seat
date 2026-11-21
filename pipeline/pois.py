@@ -148,12 +148,14 @@ def wiki_query(params, retries=5):
 
 
 def clean_summary(text, limit):
-    para = next((p for p in text.split("\n") if len(p.strip()) > 40), text).strip()
+    # the lead section (all intro paragraphs), up to `limit` characters
+    paras = [p.strip() for p in text.split("\n") if len(p.strip()) > 40]
+    para = "\n\n".join(paras) if paras else text.strip()
     # drop the pronunciation/etymology parenthetical in the first sentence: "X (/ˈfoʊ/; Russian: ...) is"
     m = re.match(r"^([^(]{0,120}?)\s*\(([^()]|\([^()]*\))*\)", para)
     if m and re.search(r"[;/ˈ]|listen|pronounced|romani[sz]ed", m.group(0)):
         para = m.group(1) + para[m.end():]
-    para = re.sub(r"\s{2,}", " ", para)
+    para = re.sub(r"[ \t]{2,}", " ", para)
     if len(para) > limit:
         cut = para[:limit]
         end = max(cut.rfind(". "), cut.rfind("; "))
