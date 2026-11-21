@@ -1,0 +1,45 @@
+{
+  "flight": "QR720",
+  "_departure_note": "PLACEHOLDER DATE: set your real date. Scheduled time is ~16:25 PST; confirm with Qatar Airways.",
+  "departure": "2026-12-05T16:25:00-08:00",
+  "block_minutes": 915,
+  "taxi_out_minutes": 20,
+  "taxi_in_minutes": 10,
+  "climb_minutes": 25,
+  "descent_minutes": 30,
+  "origin": { "iata": "SEA", "name": "Seattle-Tacoma International", "lat": 47.4490, "lon": -122.3093 },
+  "destination": { "iata": "DOH", "name": "Hamad International", "lat": 25.2731, "lon": 51.6081 },
+
+  "corridor_km": 300,
+  "max_corridor_km": 900,
+  "segment_km": 250,
+
+  "zoom": {
+    "_note": "maxzoom per corridor segment, chosen by daylight (sun at the segment while you pass it) and land fraction",
+    "world": 4,
+    "wide": 6,
+    "wide_km": 1200,
+    "day_land": 12,
+    "twilight_land": 12,
+    "night_land": 10,
+    "day_water": 8,
+    "night_water": 6,
+    "airport": 13,
+    "airport_radius_km": 40,
+    "water_threshold": 0.85
+  },
+  "budget_mb": 400,
+  "protomaps_build": "latest",
+
+  "pois": {
+    "min_sitelinks": 6,
+    "rank_by": "pageviews",
+    "min_views": 300,
+    "min_length": 2500,
+    "_min_views_note": "English Wikipedia page views over 60 days; below this a feature is too obscure to list",
+    "per_100km": 14,
+    "max_total": 5000,
+    "summary_chars": 600,
+    "chunk_km": 600
+  }
+}

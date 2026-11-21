@@ -1,0 +1,70 @@
+# Night-before checklist (on the iPhone)
+
+Do this on Wi-Fi, the evening before. It takes about 15 minutes, most of it the download.
+
+## 1. Install
+
+- [ ] In **Safari**, open the site URL.
+- [ ] Share → **Add to Home Screen** → Add.
+- [ ] Close Safari. From now on open **only the Home Screen icon**. Storage in the home-screen app
+      is separate from Safari's, so anything cached in a Safari tab does not count.
+
+## 2. Confirm it is fully cached
+
+- [ ] Open the app from the icon. On the start card, the line under the flight should change to
+      `… cached, ready for offline ✓`. If it is still counting, leave the app open with the screen
+      on until it finishes.
+- [ ] Tap ⚙︎ and check:
+  - [ ] **Display mode** says *standalone (home screen) ✓*.
+  - [ ] The status line is green: `318 MB of 318 MB cached, ready for offline ✓` (the exact size
+        depends on the build).
+  - [ ] **Persistent storage** says *granted ✓*. If it says *not granted*, the data can still stay;
+        iOS rarely evicts home-screen apps, but it is worth knowing.
+  - [ ] Tap **Verify** → the log says `all N files present ✓`.
+  - [ ] Optional: **Deep verify** re-hashes every byte (about a minute).
+- [ ] Check that the **Route** line names the right flight and date.
+
+## 3. Airplane mode
+
+- [ ] Turn on **Airplane Mode** and make sure Wi-Fi is off too (Control Centre can quietly turn
+      Wi-Fi back on).
+- [ ] Swipe the app away in the app switcher, then reopen it from the icon. This is the real test:
+      a cold start with no network.
+- [ ] No red banner appears.
+
+## 4. GPS fix
+
+- [ ] Tap **Start GPS** and allow location (**Precise** on). If there is no prompt and it says
+      *Location denied*, go to Settings → Privacy & Security → Location Services → Safari Websites →
+      *While Using the App*.
+- [ ] Wait for the chip to go green: `GPS ±… m`. Indoors with no network, the first fix can take
+      **several minutes**. In airplane mode the GPS gets no assistance data, so it has to collect
+      satellite data itself. A window helps a lot.
+- [ ] Tip for the day: get a fix at the gate **before** airplane mode, and keep the app open. A warm
+      GPS refixes in seconds at the window.
+
+## 5. Tiles and features
+
+- [ ] Pinch-zoom around your current location: streets and labels draw (detail near SEA goes to z13).
+- [ ] ⚙︎ → Position → **Simulate flight**, drag *From* to about two-thirds, and close settings:
+  - [ ] The map follows the fake plane over the daylight stretch, with labels.
+  - [ ] **Out the window** lists features with ◀ LEFT / RIGHT ▶, the km off track and minutes to abeam.
+  - [ ] Tap one: a summary appears.
+  - [ ] The timeline strip has a red marker, and its label reads *Daylight for …* or *Next daylight in …*.
+- [ ] ⚙︎ → **Network fetches** still reads **0**.
+- [ ] Switch back to **GPS** (⚙︎ → Position → GPS).
+
+## 6. Keep-awake and power
+
+- [ ] ⚙︎ → **Keep screen on** shows `api`, `video` or `api+video`. Lock the phone only if you mean to.
+      If the screen still dims, turn on ⚙︎ → *Always use the video keep-awake fallback*.
+- [ ] Settings → Display & Brightness → Auto-Lock: set it to *Never* for the flight as a backstop.
+- [ ] Bring a charger or power bank. GPS plus a lit screen drains the battery fast.
+
+## On board
+
+- Window seat, phone near the glass. The GPS works fine in airplane mode, but the cabin blocks a
+  lot of sky.
+- If GPS drops out, the app shows a faded plane at the **schedule estimate**, labelled as such.
+  You can turn that off in ⚙︎.
+- Use ⬆︎ (track-up) so the left of the screen is the left of the plane.
