@@ -3,7 +3,8 @@
 // phone (KML / GPX / CSV / GeoJSON) replaces it without any rebuild; it is kept in localStorage.
 import { haversineKm, bearingDeg, gcInterpolate, destination } from './geo.js';
 
-const LS_KEY = 'ws-route-override';
+import { PREFIX } from './prefix.js';
+const LS_KEY = `${PREFIX}-route-override`;
 
 export class Route {
   constructor(json) {

@@ -8,11 +8,12 @@ import { OfflineCache, persistStorage, fmtMB } from './cache.js';
 import { Timeline } from './timeline.js';
 import { KeepAwake } from './wakelock.js';
 import { nightPolygon, sunElevation, compass } from './geo.js';
+import { PREFIX } from './prefix.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
-const prefs = JSON.parse(localStorage.getItem('ws-prefs') || '{}');
-const savePrefs = () => localStorage.setItem('ws-prefs', JSON.stringify(prefs));
+const prefs = JSON.parse(localStorage.getItem(`${PREFIX}-prefs`) || '{}');
+const savePrefs = () => localStorage.setItem(`${PREFIX}-prefs`, JSON.stringify(prefs));
 
 const S = {
   route: null, baseRoute: null, overridden: false,

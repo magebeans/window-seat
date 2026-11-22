@@ -15,8 +15,9 @@
  * down, the response is a 504 and every open page is told which file was missing.
  */
 const VERSION = '__VERSION__';
-const SHELL = `ws-shell-${VERSION}`;
-const DATA = 'ws-data';
+const PREFIX = '__PREFIX__'; // cache namespace; lets two builds share an origin
+const SHELL = `${PREFIX}-shell-${VERSION}`;
+const DATA = `${PREFIX}-data`;
 const SCOPE = new URL(self.registration.scope);
 const LRU_PARTS = 6;
 
@@ -76,7 +77,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     for (const k of await caches.keys()) {
-      if (k.startsWith('ws-shell-') && k !== SHELL) await caches.delete(k);
+      if (k.startsWith(`${PREFIX}-shell-`) && k !== SHELL) await caches.delete(k);
     }
     await self.clients.claim();
     broadcast({ type: 'activated', version: VERSION });

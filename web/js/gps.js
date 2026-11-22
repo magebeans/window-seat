@@ -2,6 +2,7 @@
 // All emit the same shape:
 //   { lat, lon, acc (m), alt (m|null), heading (deg|null), speedKmh (number|null), t (ms), source }
 import { haversineKm, bearingDeg, destination } from './geo.js';
+import { PREFIX } from './prefix.js';
 
 /** Derives heading and ground speed from successive fixes when the device does not report them. */
 export class MotionEstimator {
@@ -106,7 +107,7 @@ export class Clock {
  * relaunch mid-flight continues from where you left it, plus the time that has passed.
  */
 export class ManualSource {
-  static KEY = 'ws-manual';
+  static KEY = `${PREFIX}-manual`;
   constructor(route, onFix, clock) {
     this.route = route; this.onFix = onFix; this.clock = clock;
     this.timer = null; this.paused = false;

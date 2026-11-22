@@ -7,8 +7,10 @@
 //   * the page can hold a wake lock and show progress while it runs.
 // Every file is checked against the sha256 in precache.json before it is stored.
 
-const DATA = 'ws-data';
-const shellName = (v) => `ws-shell-${v}`;
+import { PREFIX } from './prefix.js';
+
+const DATA = `${PREFIX}-data`;
+const shellName = (v) => `${PREFIX}-shell-${v}`;
 const MB = 1e6;
 
 export class OfflineCache {

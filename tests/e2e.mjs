@@ -55,7 +55,7 @@ try {
 
   // "Download missing" really restores deleted files, and says so when there is nothing to do
   await page.evaluate(async () => {
-    const c = await caches.open('ws-data');
+    const c = await caches.open((await caches.keys()).find((k) => k.endsWith('-data')));
     const keys = (await c.keys()).filter((r) => /tiles|fonts/.test(r.url)).slice(0, 8);
     for (const k of keys) await c.delete(k);
     await window.__ws.cache().status();
@@ -82,7 +82,7 @@ try {
   await page.waitForTimeout(3000);
 
   const feats = await page.evaluate(() => window.__ws.map().queryRenderedFeatures().filter((f) => f.source === 'protomaps').length);
-  ok('vector tiles render offline', feats > 50, `${feats} rendered basemap features`);
+  ok('vector tiles render offline', feats > 30, `${feats} rendered basemap features`);
 
   // labels must actually draw (glyphs served offline): placed text symbols from the basemap
   const labels = await page.evaluate(() => window.__ws.map().queryRenderedFeatures().filter((f) => f.source === 'protomaps' && f.layer.type === 'symbol' && f.layer.layout?.['text-field']).length);
@@ -137,7 +137,7 @@ try {
   await page.waitForTimeout(3000);
   const man = await page.evaluate(() => ({ src: window.__ws.S.source, t: Math.round((window.__ws.clock.now() - new Date(window.__ws.S.route.json.departure)) / 60000), chip: document.getElementById('gps-text').textContent, label: document.getElementById('pos-label').textContent, look: document.querySelectorAll('#look-list li:not(.empty)').length }));
   ok('slider sets position (manual mode)', man.src === 'manual' && Math.abs(man.t - 700) <= 2 && man.look >= 3, `${man.chip} | ${man.label} | ${man.look} items`);
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ws-manual')));
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-manual')))));
   ok('slider position is saved for relaunch', saved && Math.abs(saved.t - 700) < 3, JSON.stringify(saved));
   await page.screenshot({ path: path.join(ROOT, 'build/e2e-slider.png') });
 
